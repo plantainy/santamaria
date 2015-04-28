@@ -1,38 +1,44 @@
 package george.knightmoves;
 
-import java.util.List;
-import java.util.Map;
+import org.ejml.simple.SimpleMatrix;
 
 public class KnightMoveAlgo {
     private static final int MAX_VOWELS = 2;
-    private static final Map<Character, GroupedKeyList> moveMap = KeypadHolder.getMoveMap();
-    private static final Map<Character, GroupedKeyList> reducedMoveMap = KeypadHolder.getReducedMoveMap();
-
-    public static int calcNumSequences(int n) {
-        if (n < 1)
+    public static long calcNumSequences(int length) {
+        if (length < 1)
             return 0;
-        if (n == 1)
-            return moveMap.size();
-        int numSeq = 0;
-        for (GroupedKeyList startList : moveMap.values())
-            numSeq += getEndKeyList(startList, n).getNumAllKeys();
+        if (length == 1)
+            return KeypadInitializer.getNumKeys();
+        String reverseBinaryStr = new StringBuilder(Integer.toBinaryString(length - 1)).reverse().toString();
+        SimpleMatrix[] lastMats = getLastMats(KeypadInitializer.initBaseMats(), reverseBinaryStr);
+        SimpleMatrix[] frontVectors = KeypadInitializer.initFrontVectors();
+        SimpleMatrix[] finalVectors = multiplyMats(frontVectors, lastMats);
+        SimpleMatrix sumVector = KeypadInitializer.initSumVector();
+        long numSeq = 0;
+        for (SimpleMatrix vector : finalVectors)
+            numSeq += vector.mult(sumVector).get(0, 0);
         return numSeq;
     }
 
-    private static GroupedKeyList getEndKeyList(GroupedKeyList startList, int n) {
-        if (n == 2)
-            return startList;
-        GroupedKeyList endList = new GroupedKeyList(MAX_VOWELS + 1);
-        for (int i = 0; i < startList.getNumOfGroups(); i++) {
-            List<Character> group = startList.getGroup(i);
-            for (char start : group) {
-                GroupedKeyList nextList = reducedMoveMap.get(start);
-                for (int j = 0; j < nextList.getNumOfGroups(); j++)
-                    if (i + j <= MAX_VOWELS)
-                        endList.addAllKeysToGroup(nextList.getGroup(j), i + j);
-            }
+    private static SimpleMatrix[] getLastMats(SimpleMatrix[] mats, String reverseBinaryStr) {
+        SimpleMatrix[] lastMats = null;
+        for (int i = 0; i < reverseBinaryStr.length(); i++) {
+            if (i != 0)
+                mats = multiplyMats(mats, mats);
+            if (reverseBinaryStr.charAt(i) == '1')
+                lastMats = lastMats == null ? mats : multiplyMats(lastMats, mats);
         }
-        startList = null; // null out startList object for GC
-        return getEndKeyList(endList, n - 1);
+        return lastMats;
+    }
+
+    private static SimpleMatrix[] multiplyMats(SimpleMatrix[] leftMats, SimpleMatrix[] rightMats) {
+        SimpleMatrix[] resMats = new SimpleMatrix[MAX_VOWELS + 1];
+        for (int i = 0; i < resMats.length; i++)
+            resMats[i] = new SimpleMatrix(leftMats[0].numRows(), rightMats[0].numCols());
+        for (int i = 0; i < leftMats.length; i++)
+            for (int j = 0; j < rightMats.length; j++)
+                if (i + j <= MAX_VOWELS)
+                    resMats[i + j] = resMats[i + j].plus(leftMats[i].mult(rightMats[j]));
+        return resMats;
     }
 }
