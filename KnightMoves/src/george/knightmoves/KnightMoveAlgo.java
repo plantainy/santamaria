@@ -14,8 +14,8 @@ public class KnightMoveAlgo {
         if (n == 1)
             return moveMap.size();
         int numSeq = 0;
-        for (GroupedKeyList groups : moveMap.values())
-            numSeq += getEndKeyList(groups, n).getNumAllKeys();
+        for (GroupedKeyList startList : moveMap.values())
+            numSeq += getEndKeyList(startList, n).getNumAllKeys();
         return numSeq;
     }
 
@@ -32,6 +32,7 @@ public class KnightMoveAlgo {
                         endList.addAllKeysToGroup(nextList.getGroup(j), i + j);
             }
         }
+        startList = null; // null out startList object for GC
         return getEndKeyList(endList, n - 1);
     }
 }
