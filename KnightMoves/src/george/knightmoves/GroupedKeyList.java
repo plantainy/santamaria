@@ -1,38 +1,34 @@
 package george.knightmoves;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-
 public class GroupedKeyList {
-    private final List<List<Character>> groups;
+    private final String[] nexts;
 
     public GroupedKeyList(int numGroups) {
-        this.groups = new ArrayList<>(numGroups);
+        this.nexts = new String[numGroups];
         for (int i = 0; i < numGroups; i++)
-            groups.add(new LinkedList<>());
+            nexts[i] = "".intern();
     }
 
-    public List<Character> getGroup(int cost) {
-        return groups.get(cost);
+    public String getGroup(int cost) {
+        return nexts[cost];
     }
 
     public void addKeyToGroup(char key, int cost) {
-        groups.get(cost).add(key);
+        nexts[cost] += key;
     }
 
-    public void addAllKeysToGroup(List<Character> ends, int cost) {
-        groups.get(cost).addAll(ends);
+    public void addAllKeysToGroup(String ends, int cost) {
+        nexts[cost] += ends;
     }
 
     public int getNumOfGroups() {
-        return groups.size();
+        return nexts.length;
     }
 
-    public int getNumAllKeys() {
+    public int getNumOfAllKeys() {
         int sum = 0;
-        for (List<Character> group : groups)
-            sum += group.size();
+        for (String group : nexts)
+            sum += group.length();
         return sum;
     }
 }
