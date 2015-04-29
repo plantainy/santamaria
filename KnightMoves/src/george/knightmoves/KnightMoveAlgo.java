@@ -30,9 +30,9 @@ public class KnightMoveAlgo {
         if (length == 1)
             return KeypadInitializer.getNumKeys();
         int numMoves = length - 1;
-        String movesInBinary = new StringBuilder(Integer.toBinaryString(numMoves)).reverse().toString();
+        String binaryNumMoves = new StringBuilder(Integer.toBinaryString(numMoves)).reverse().toString();
         int groupSize = maxVowels + 1;
-        MatrixGroup finalMats = getFinalMats(groupSize, KeypadInitializer.getBaseMats(), movesInBinary);
+        MatrixGroup finalMats = getFinalMats(groupSize, KeypadInitializer.getBaseMats(), binaryNumMoves);
         SimpleMatrix sumVector = KeypadInitializer.getSumVector();
         SimpleMatrix reduceVector = KeypadInitializer.getReduceVector();
         long numSeq = 0;
@@ -47,15 +47,15 @@ public class KnightMoveAlgo {
      * The complexity is O(log n) where n = numMoves, as the calculation is on binary sequence. <br/>
      * @param groupSize size of the last matrix group
      * @param mats base mats for single move
-     * @param movesInBinary the number of moves in binary string (reversed), used to optimize the procedure.
+     * @param binaryNumMoves the number of moves in binary string (reversed), used to optimize the procedure.
      * @return the final matrix group after all moves
      */
-    private static MatrixGroup getFinalMats(int groupSize, MatrixGroup mats, String movesInBinary) {
+    private static MatrixGroup getFinalMats(int groupSize, MatrixGroup mats, String binaryNumMoves) {
         MatrixGroup finalMats = null;
-        for (int i = 0; i < movesInBinary.length(); i++) {
+        for (int i = 0; i < binaryNumMoves.length(); i++) {
             if (i != 0)
                 mats = combineMatGroups(groupSize, mats, mats);
-            if (movesInBinary.charAt(i) == '1')
+            if (binaryNumMoves.charAt(i) == '1')
                 finalMats = finalMats == null ? mats : combineMatGroups(groupSize, finalMats, mats);
         }
         return finalMats;
@@ -65,7 +65,7 @@ public class KnightMoveAlgo {
      * Combine two matrix groups to a new matrix group of a fixed size. An example to illustrate the procedure:
      * <ul>
      *     <li> groupSize = 3, leftMats = {L0, L1, L2} and rightMats = {R0, R1, R2} 
-     *          where L's and R's are move matrices and their positions in the group indicate the costs of the moves. </li>
+     *          where L's and R's are move matrices and their positions in the group indicate the move costs. </li>
      *     <li> The resulting combined matrix group will be {L0*R0, L0*R1+L1*R0, L0*L2+L1*R1+L2*R0}.
      *          Thus the positions of the matrices continue to indicate the costs of the moves. </li>
      *     <li> Other combinations, e.g., L1*R2, are dropped from the combined matrix group
@@ -81,8 +81,8 @@ public class KnightMoveAlgo {
         for (int i = 0; i < leftMats.size(); i++)
             for (int j = 0; j < rightMats.size(); j++)
                 if (i + j < combinedMats.size()) {
-                    SimpleMatrix combinedMat = combinedMats.matAt(i + j).plus(leftMats.matAt(i).mult(rightMats.matAt(j)));
-                    combinedMats.setMat(combinedMat, i + j);
+                    SimpleMatrix mat = combinedMats.matAt(i + j).plus(leftMats.matAt(i).mult(rightMats.matAt(j)));
+                    combinedMats.setMat(mat, i + j);
                 }
         return combinedMats;
     }

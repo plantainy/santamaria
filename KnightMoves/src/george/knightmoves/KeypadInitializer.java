@@ -54,7 +54,7 @@ public class KeypadInitializer {
      * baseMats is a group of two matrices: {M0, M1}, which contains the moves of costs 0 and 1 respectively. <br/>
      * The cost is defined as follows:
      * <ul>
-     *     <li> single move from any key to vowel: cost 1 </li>
+     *     <li> single move from any key to a vowel: cost 1 </li>
      *     <li> else (including from vowel to non-vowel): cost 0 </li>
      * </ul>
      */
@@ -78,7 +78,7 @@ public class KeypadInitializer {
     }
 
     /**
-     * Put the single move to the correct position in baseMats.
+     * Put a single move to the correct position in baseMats.
      * It is called "safe" because it makes sure that the "to" key of the move is a valid key on keypad.
      * @param baseMats single move matrix group
      * @param from "from" key of the move
