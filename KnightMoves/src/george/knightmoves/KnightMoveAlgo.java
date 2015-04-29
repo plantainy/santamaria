@@ -11,18 +11,14 @@ public class KnightMoveAlgo {
      * The algorithm to calculate number of sequences given the path length and max number of vowels on a path.
      * An illustration of the algorithm:
      * <ul>
-     *     <li> Calculate the last matrix group after all moves from keys on keypad.
+     *     <li> Calculate the final matrix group after all moves from keys on keypad.
      *          number of moves = path lengh - 1 </li>
-     *     <li> As baseMats from KeypadInitializer doesn't count the cost of a move starting from a vowel,
-     *          the number of sequences from a vowel can be too big thus needs to be reduced.
-     *          This is done by assuming that there is a invisible starting key,
-     *          which has a single move to each key on keypad, and such move costs 1 if the next key is a vowel.
-     *          This single move is captured by frontVectors,
-     *          which is applied to the last matrix group to calculate all sequences from the starting key.
-     *          This reduces the over-counting of the sequences from vowel keys
-     *          and results a group of row vectors called finalVectors. </li>
-     *     <li> Finally, sum all numbers in finalVectors by applying sumVector. </li>
-     *
+     *     <li> As baseMats from KeypadInitializer doesn't consider the cost of a single move from a vowel,
+     *          the number of sequences started from a vowel can be too big.
+     *          This is, in the last matrix of the final matrix group,
+     *          all rows corresponding to vowels should be dropped, as they actually carry more cost than limit.
+     *          Therefore, the result is the sum of all elements in the final matrix group except for those dropped.
+     *          This is done by applying reduceVector to the last matrix.
      * </ul>
      * @param length path length
      * @param maxVowels max number of vowels on a path
@@ -36,34 +32,33 @@ public class KnightMoveAlgo {
         int numMoves = length - 1;
         String movesInBinary = new StringBuilder(Integer.toBinaryString(numMoves)).reverse().toString();
         int groupSize = maxVowels + 1;
-        MatrixGroup lastMats = getLastMats(groupSize, KeypadInitializer.initBaseMats(), movesInBinary);
-        MatrixGroup frontVectors = KeypadInitializer.initFrontVectors();
-        MatrixGroup finalVectors = combineMatGroups(groupSize, frontVectors, lastMats);
-        SimpleMatrix sumVector = KeypadInitializer.initSumVector();
+        MatrixGroup finalMats = getFinalMats(groupSize, KeypadInitializer.getBaseMats(), movesInBinary);
+        SimpleMatrix sumVector = KeypadInitializer.getSumVector();
+        SimpleMatrix reduceVector = KeypadInitializer.getReduceVector();
         long numSeq = 0;
-        for (int i = 0; i < finalVectors.size(); i++)
-            numSeq += finalVectors.matAt(i).mult(sumVector).get(0, 0);
+        for (int i = 0; i < finalMats.size() - 1; i++)
+            numSeq += sumVector.mult(finalMats.matAt(i)).mult(sumVector.transpose()).get(0, 0);
+        numSeq += reduceVector.mult(finalMats.matAt(finalMats.size() - 1)).mult(sumVector.transpose()).get(0, 0);
         return numSeq;
     }
 
     /**
-     * Returns the last matrix group after all the moves.
+     * Returns the final matrix group after all the moves.
      * The complexity is O(log n) where n = numMoves, as the calculation is on binary sequence. <br/>
-     * The last matrix group should be further reduced with a move from an invisible starting key to the keys on keypad.
      * @param groupSize size of the last matrix group
      * @param mats base mats for single move
      * @param movesInBinary the number of moves in binary string (reversed), used to optimize the procedure.
-     * @return the last matrix group after all moves
+     * @return the final matrix group after all moves
      */
-    private static MatrixGroup getLastMats(int groupSize, MatrixGroup mats, String movesInBinary) {
-        MatrixGroup lastMats = null;
+    private static MatrixGroup getFinalMats(int groupSize, MatrixGroup mats, String movesInBinary) {
+        MatrixGroup finalMats = null;
         for (int i = 0; i < movesInBinary.length(); i++) {
             if (i != 0)
                 mats = combineMatGroups(groupSize, mats, mats);
             if (movesInBinary.charAt(i) == '1')
-                lastMats = lastMats == null ? mats : combineMatGroups(groupSize, lastMats, mats);
+                finalMats = finalMats == null ? mats : combineMatGroups(groupSize, finalMats, mats);
         }
-        return lastMats;
+        return finalMats;
     }
 
     /**
